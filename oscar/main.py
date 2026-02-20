@@ -6,8 +6,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 
-from oscar.routers import status
 from oscar.version import get_version
+from oscar.routers import status, docling
 from oscar.logging import configure_logging
 from oscar.telemetry import setup_opentelemetry
 from oscar.middleware import RequestLoggingMiddleware
@@ -60,6 +60,7 @@ app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
 
 # Configure routers
 app.include_router(status.router)
+app.include_router(docling.router)
 
 
 @app.get("/docs", include_in_schema=False)
