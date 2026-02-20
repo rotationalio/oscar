@@ -7,6 +7,7 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from oscar.routers import status
 from oscar.version import get_version
 from oscar.logging import configure_logging
+from oscar.middleware import RequestLoggingMiddleware
 
 from contextlib import asynccontextmanager
 
@@ -39,6 +40,9 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
+
+# Add middleware
+app.add_middleware(RequestLoggingMiddleware)
 
 # Add static files
 app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")

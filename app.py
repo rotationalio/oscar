@@ -7,7 +7,12 @@ from oscar.logging import configure_logging
 
 def serve(args: argparse.Namespace) -> None:
     configure_logging()
-    uvicorn.run("oscar.main:app", host=args.host, port=args.port, reload=args.reload)
+    uvicorn.run(
+        "oscar.main:app",
+        host=args.host,
+        port=args.port,
+        reload=args.reload,
+    )
 
 
 if __name__ == "__main__":

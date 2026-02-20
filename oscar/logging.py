@@ -1,7 +1,18 @@
+import os
 import logging
 import logging.config
 
+import pythonjsonlogger.json as jsonlogger
+
+from opentelemetry import trace
 from pythonjsonlogger.core import RESERVED_ATTRS
+
+
+def get_logging_level() -> str:
+    """
+    Returns the logging level based on the environment variable.
+    """
+    return os.environ.get("LOG_LEVEL", "INFO").upper()
 
 
 LOGGING_CONFIG = {
@@ -20,13 +31,13 @@ LOGGING_CONFIG = {
         "json": {
             "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
             "datefmt": "%Y-%m-%d %H:%M:%S",
-            "()": "pythonjsonlogger.json.JsonFormatter",
+            "()": "oscar.logging.OTelJSONFormatter",
+            "reserved_attrs": RESERVED_ATTRS + ["color_message"],
             "rename_fields": {
                 "asctime": "timestamp",
                 "levelname": "level",
                 "name": "logger",
             },
-            "reserved_attrs": RESERVED_ATTRS + ["color_message"],
         },
     },
     "handlers": {
@@ -49,20 +60,25 @@ LOGGING_CONFIG = {
     "loggers": {
         "uvicorn": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": get_logging_level(),
             "propagate": False,
         },
         "uvicorn.error": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": get_logging_level(),
             "propagate": False,
         },
+        # Disable access logs in favor of middleware logging.
         "uvicorn.access": {
-            "handlers": ["access"],
-            "level": "INFO",
+            "handlers": [],
+            "level": logging.CRITICAL + 1,
             "propagate": False,
             "filters": ["probe"],
         },
+    },
+    "root": {
+        "handlers": ["root"],
+        "level": get_logging_level(),
     },
 }
 
@@ -80,6 +96,22 @@ class ProbeFilter(logging.Filter):
             and message.find("GET /livez") == -1
             and message.find("GET /readyz") == -1
         )
+
+
+class OTelJSONFormatter(jsonlogger.JsonFormatter):
+    """
+    Includes OpenTelemetry trace and span context information.
+    """
+
+    def add_fields(self, log_data: dict, record: logging.LogRecord, message_dict: dict) -> None:
+        super().add_fields(log_data, record, message_dict)
+
+        # Add trace context if available
+        span = trace.get_current_span()
+        if span.is_recording():
+            ctx = span.get_span_context()
+            log_data["trace_id"] = format(ctx.trace_id, "032x")
+            log_data["span_id"] = format(ctx.span_id, "016x")
 
 
 def configure_logging() -> None:
