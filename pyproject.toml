@@ -6,11 +6,13 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiorwlock>=1.5.0",
+    "docling>=2.74.0",
     "fastapi[standard]>=0.129.0",
     "opentelemetry-distro[otlp]>=0.60b1",
     "opentelemetry-instrumentation>=0.60b1",
     "opentelemetry-instrumentation-fastapi>=0.60b1",
     "opentelemetry-instrumentation-logging>=0.60b1",
+    "orjson>=3.11.7",
     "pydantic>=2.12.5",
     "python-json-logger>=4.0.0",
     "uvicorn>=0.41.0",
