@@ -1,3 +1,5 @@
+import logging
+
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
@@ -7,9 +9,11 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from oscar.routers import status
 from oscar.version import get_version
 from oscar.logging import configure_logging
+from oscar.telemetry import setup_opentelemetry
 from oscar.middleware import RequestLoggingMiddleware
 
 from contextlib import asynccontextmanager
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -31,6 +35,10 @@ async def lifespan(app: FastAPI):
     await status.set_service_state(status.SERVICE_STOPPING)
 
 
+# Setup OpenTelemetry and logging
+tracer = setup_opentelemetry()
+logger = logging.getLogger(__name__)
+
 # Configure global application
 app = FastAPI(
     title="Oscar",
@@ -40,6 +48,9 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
+
+# Instrument FastAPI for automatic tracing
+FastAPIInstrumentor.instrument_app(app)
 
 # Add middleware
 app.add_middleware(RequestLoggingMiddleware)

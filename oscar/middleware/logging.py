@@ -1,18 +1,18 @@
-import os
 import time
 import logging
 import traceback
 
 from typing import Callable
 from oscar.version import get_version
+from oscar.telemetry import get_service_name
 
 from fastapi import Request
 from starlette.responses import Response, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 
+service = get_service_name()
 version = get_version(short=True)
-service = os.environ.get("SERVICE_NAME", "oscar")
 logger = logging.getLogger("oscar.requests")
 
 
