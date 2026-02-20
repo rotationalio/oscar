@@ -4,9 +4,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 
-from oscar import telemetry
 from oscar.routers import status
 from oscar.version import get_version
+from oscar.logging import configure_logging
 
 from contextlib import asynccontextmanager
 
@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     Lifespan context manager configures the service state
     """
     # Application startup
-    telemetry.configure_logging()
+    configure_logging()
     await status.set_service_state(status.SERVICE_ONLINE)
 
     # Allow application to run
